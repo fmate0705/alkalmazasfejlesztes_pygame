@@ -46,6 +46,9 @@ class Player:
     x = 80
     y = 310
 
+    y_sneak = 340
+    jump_velocity = 8.5
+
     # Konstruktor
     def __init__(self):
 
@@ -53,6 +56,9 @@ class Player:
         self.sneak_img = sneaking
         self.run_img = running
         self.jump_img = jumping
+
+        # Ugráshoz szükséges változó
+        self.jump_vel = jump_velocity
 
         # A játékos állapota
         self.dino_run = True
@@ -105,11 +111,24 @@ class Player:
 
     # Sneak
     def sneak(self):
-        pass
+        self.image = self.sneak_img[self.step_index // 5] # Futás animáció
+        self.dino_box = self.image.get_rect() # Hitbox
+        self.dino_box.x = self.x
+        self.dino_box.y = self.y_sneak
+
+        # step_index növelése - minden update-nál
+        self.step_index += 1
     
     # Ugrás
     def jump(self):
-        pass
+        self.image = self.jump_img # Ugrás kép
+        if self.dino_jump: # Ha a ugrik
+            self.dino_box.y -= self.jump_vel * 4 # Ha eléri a csúcsot akkor 0 lesz, innentől negatívba megy ezér elkezd lefelé esni.
+            self.jump_vel -= 0.8 # jump_vel csökkentése
+
+        if self.jump_vel > - self.jump_velocity: #Ha a jump_vel eléri az ugás magasság negatív értékét akkor leesett a földre
+            dino_jump = False # ugrás állapot leállítása
+            self.jump_vel = self.jump_velocity # jump_vel visszaállítása
 
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.dino_box.x, self.dino_box.y))
