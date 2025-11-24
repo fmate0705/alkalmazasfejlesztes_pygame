@@ -1,5 +1,6 @@
 import pygame # Pygame importálás
 import os #Operating System
+import random # Random modul - random számok generálása
 
 pygame.init() # Pygame inicializálás
 
@@ -58,7 +59,7 @@ class Player:
         self.jump_img = jumping
 
         # Ugráshoz szükséges változó
-        self.jump_vel = jump_velocity
+        self.jump_vel = self.jump_velocity # Hiba javítás
 
         # A játékos állapota
         self.dino_run = True
@@ -126,21 +127,79 @@ class Player:
             self.dino_box.y -= self.jump_vel * 4 # Ha eléri a csúcsot akkor 0 lesz, innentől negatívba megy ezér elkezd lefelé esni.
             self.jump_vel -= 0.8 # jump_vel csökkentése
 
-        if self.jump_vel > - self.jump_velocity: #Ha a jump_vel eléri az ugás magasság negatív értékét akkor leesett a földre
-            dino_jump = False # ugrás állapot leállítása
+        if self.jump_vel < - self.jump_velocity: #Ha a jump_vel eléri az ugás magasság negatív értékét akkor leesett a földre
+            self.dino_jump = False # Ugrás állapot leállítása
             self.jump_vel = self.jump_velocity # jump_vel visszaállítása
 
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.dino_box.x, self.dino_box.y))
 
+
+# Felhő osztály
+class Cloud:
+    def __init__(self):
+        self.x = screen_width + random.randint(800,1000) # Random felhő spawnolás - A felhő a képernyőn kívül random távolságra spawnol
+        self.y = random.randint(50,100) # Random magasság
+        self.image = cloud # Sprite beállítása
+        self.width = self.image.get_width() # Sprite szélességének leérése
+
+    def update(self):
+        self.x -= game_speed # Felhő mozgatása
+
+        # Ha a felhő lemegy a képernyőről akkor visszakerül egy random x kordinátára a képernyőn kívül
+        if self.x < -self.width:
+            self.x = screen_width + random.randint(2500, 3000)
+            self.y = random.randint(50, 100) # + Egy másik random magasságba
+
+    def draw(self,SCREEN):
+        SCREEN.blit(self.image, (self.x, self.y)) # Megjelenítés a képernyőn
+    
+
+
 # Main function - később hasznos lesz a menü létrehozásában
 def main():
+    # Globális változók létrehozása
+    global game_speed, x_pos_bg, y_pos_bg, points
     run = True # Játék állapota
     clock = pygame.time.Clock() # Időmérő létrehozása
+
+    # Globális változók incializálása
+    game_speed = 14
+    x_pos_bg = 0
+    y_pos_bg = 380
+    points = 0
+
+    font = pygame.font.Font('freesansbold.ttf', 20) # Betűtípus létrehozása a kiiratáshoz
+
+    def score():
+        global points,game_speed
+        points += 1 # Pontok növelése minden hívásnál - minden képfrissítésnél
+        if points % 100 == 0:
+            game_speed += 1 # Játék sebességének a növelése minden 100 pont után
+        
+        # Pontok megjelenítése
+        text = font.render(str(points), True, (0, 0, 0))
+        textRect = text.get_rect() 
+        textRect.center = (1000, 40) # Jobb felső sarokba helyezés
+        main_screen.blit(text, textRect) # Megjelenítés
+
+    # Háttér
+    def bg():
+        global x_pos_bg, y_pos_bg
+        bg_img_width = background.get_width() # Háttér szélességének lekérése
+        main_screen.blit(background, (x_pos_bg, y_pos_bg)) # Háttér megjelenítés
+        main_screen.blit(background, (bg_img_width + x_pos_bg, y_pos_bg)) # Második háttér megjelenítése
+        # Ha az első háttér lemegy a képről akkor a második következik utána - végtelenül ismétlődik a háttér
+        if x_pos_bg <= - bg_img_width:
+            main_screen.blit(background, (bg_img_width + x_pos_bg, y_pos_bg))
+            x_pos_bg = 0
+        x_pos_bg -= game_speed # Háttér mozgatása
 
     # Player példányosítása
     player = Player()
 
+    # Felhő példányosítása
+    cloud = Cloud()
 
     # Ablak futtatása
     while run:
@@ -153,14 +212,17 @@ def main():
         # Fehér képernyő létrehozása 
         main_screen.fill((255,255,255))
 
-        # A felhasználó által lenyomott gomb
-        userInput = pygame.key.get_pressed()
+        userInput = pygame.key.get_pressed() # A felhasználó által lenyomott gomb
 
-        # Player megjelenítése
-        player.draw(main_screen)
+        player.draw(main_screen) # Player megjelenítése
+        player.update(userInput) # Lenyomott billentyű átadása
 
-        # Lenyomott billentyű átadása
-        player.update(userInput)
+        cloud.draw(main_screen) # Felhő megjelenítése
+        cloud.update() #Felhő mozgatása
+        
+        score() # Pontok létrehozása
+
+        bg() # Background létrehozása
 
         # Clock tick megadása
         clock.tick(30)
