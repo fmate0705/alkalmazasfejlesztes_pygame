@@ -62,3 +62,6 @@ A lefelé nyíl segítségével a felhasználó kitérhet a madarak elől, a fel
 ## A játék működése
 
 A felhasználó a dínó karakter irányításával minnél több pont elérésére törekszik. Ha a felhasználó hozzáér egy akadályhoz a játék végetér. A menüből a játékos új játékot indíthat bármelyik bellentyűkapcsoló megnyomásával. A játék 100 pontonként 1 egységgel gyorsul, a dinamikus nehézség miatt.
+
+## Figyelem!
+A programot a Vizual Studio Code nevű kódszerkesztőben készítettem, a program tesztelése során a VS Code beépített terminálját használtam. A program bezárása után esetleges hibákat adhat a terminál, hiszen az objektumok megsemmisítését a pygame nem kezeli és sajnos nem találtam olyan forrást amely lehetővé tenné a probléma megoldását, a feladatban nem használtam try/catch blokkokat a hibakezelésre, hiszen az program bezárását követő esetleges hibák nem akadályozzák a játék futását. A tesztelés előtt szükséges a Sprite-ok letöltése, illetve fontos, hogy azonos mappába legyenek mint a `main.py` fájl. Továbbá a program futtatásához szükséges a python telepítése is. 
