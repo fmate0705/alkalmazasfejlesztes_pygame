@@ -4,12 +4,15 @@ import random # Random modul - random számok generálása
 
 pygame.init() # Pygame inicializálás
 
+
 # Globális változók
 screen_height = 600
 screen_width = 1100
 
 # Képernyő létrehozása
 main_screen = pygame.display.set_mode((screen_width,screen_height))
+pygame.display.set_caption("Dino Run") # Ablak nevének megadása
+
 
 # Sprite-ok betöltése
 
@@ -39,6 +42,10 @@ cloud = pygame.image.load(os.path.join("Sprites/Other", "Cloud.png"))
 
 # Háttér / track
 background = pygame.image.load(os.path.join("Sprites/Other", "Track.png"))
+
+#Reset Gomb
+reset = pygame.image.load(os.path.join("Sprites/Other", "Reset.png"))
+
 
 # Player class létrehozása
 class Player:
@@ -216,6 +223,8 @@ def main():
 
     obstacles = [] # Akadályok tömb az akadályok tárolására
 
+    death_count = 0
+
     def score():
         global points,game_speed
         points += 1 # Pontok növelése minden hívásnál - minden képfrissítésnél
@@ -253,6 +262,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+                pygame.quit()
 
         # Fehér képernyő létrehozása 
         main_screen.fill((255,255,255))
@@ -274,7 +284,10 @@ def main():
             obstacle.draw(main_screen) # Akadály megjelenítése
             obstacle.update() # Akadály mozgatása
             if player.dino_box.colliderect(obstacle.rect): # HA a player hozzáér az akadály hitboxához
-                pygame.draw.rect(main_screen,(0,0,0),player.dino_box,2) # Fekete négyzet kirajzolása
+                pygame.time.delay(1000) # 1 másodperc várakozás - a játékos megnézheti hogy, mit hibázott
+                death_count += 1
+                menu(death_count)
+
 
         cloud.draw(main_screen) # Felhő megjelenítése
         cloud.update() #Felhő mozgatása
@@ -289,5 +302,39 @@ def main():
         # Képernyő update
         pygame.display.update()
 
-# Main hívás
-main()
+def menu(death_count):
+    global points
+    run = True
+    while run:
+        main_screen.fill((255,255,255)) # Fehér képernyő
+
+        font = pygame.font.Font('freesansbold.ttf', 20) # Betűtípus létrehozása a kiiratáshoz
+
+        if death_count == 0: #Ha a felhasználó először indítja el az alkalmazást
+            main_screen.blit(running[0],(screen_width // 2 - 20, screen_height // 2 -140)) # Dínó kép megjelenítése ( Dekoráció )
+            text = font.render("Press any Key to Start!",True, (0,0,0)) # Szöveg megjelenítése
+        elif death_count > 0: # HA a felhasználó már egyszer meghalt
+            text = font.render("Press any Key to Restart!",True, (0,0,0)) # Restart szöveg
+            score = font.render("Your Score:" + str(points),True, (0,0,0)) # Score megjelenítése
+            scoreRect = score.get_rect() # Score helye
+            scoreRect.center = (screen_width // 2, screen_height // 2 + 50) # Score helyének megadása
+            main_screen.blit(score,scoreRect) # Score megjelenítése a képernyőn
+            main_screen.blit(reset,(screen_width // 2 - 40, screen_height // 2 -140)) # Restart kép megjelenítése ( Dekoráció )
+        textRect = text.get_rect() # Szöveg helye
+        textRect.center = (screen_width // 2, screen_height // 2) # Szöveg helyének megadása
+        main_screen.blit(text,textRect) # Szöveg megjelenítése
+
+        pygame.display.update() # Képernyő frissítése
+
+        # Lehetőség a játékból való kilépésre ha a felhasználó megnyomja az X-et a sarokban
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+            # ha a felhasználó megnyom bármilyen gombot a menüben akkor lefut a main()
+            if event.type == pygame.KEYDOWN:
+                # Main hívás
+                main()
+
+# Menü meghívása a program indításakor
+menu(death_count=0)
