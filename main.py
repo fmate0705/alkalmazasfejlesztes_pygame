@@ -155,11 +155,54 @@ class Cloud:
         SCREEN.blit(self.image, (self.x, self.y)) # Megjelenítés a képernyőn
     
 
+# Obstacle parrent class
+class Obstacle:
+    def __init__(self,image,OBStype):
+        self.image = image
+        self.type = OBStype # Akadály típus 0..2
+        self.rect = self.image[self.type].get_rect() # Akadály hitbox
+        self.rect.x = screen_width # A képernyő végé lesz az x kordináta
+
+    def update(self):
+        self.rect.x -= game_speed # X kordináta változtatása a game_speed globális változó alapján
+        if self.rect.x < -self.rect.width:
+            obstacles.pop()
+
+    def draw(self,SCREEN):
+        SCREEN.blit(self.image[self.type], self.rect)
+
+# Kis kaktusz osztály
+class SmallCactus(Obstacle):
+    def __init__(self,image):
+        self.type = random.randint(0,2) # Random típus kiválasztás
+        super().__init__(image, self.type) # Parent konstruktor hívás
+        self.rect.y = 325 # y kordináta
+
+# Nagy kaktusz osztály - Ugyanaz mint a kis kaktusz, viszont lentebb kell megjeleníteni a képernyőn
+class LargeCactus(Obstacle):
+    def __init__(self,image):
+        self.type = random.randint(0,2) # Random típus kiválasztás
+        super().__init__(image, self.type) # Parent konstruktor hívás
+        self.rect.y = 300 # y kordináta
+
+# Madár / Terodaktilusz osztály - Örököl az Obstacle osztályból
+class Bird(Obstacle):
+    def __init__(self,image):
+        self.type = 0
+        super().__init__(image,self.type)
+        self.rect.y = 250
+        self.index = 0
+    
+    def draw(self,SCREEN): # Felülírja a parent class draw() function-t : A madár animált, illetve nem kaktusz típusú
+        if self.index >= 9: # HA az index nagyobb vagy egyenlő mint 9 akkor nullázódik
+            self.index = 0
+        SCREEN.blit(self.image[self.index//5], self.rect) # Madár megjelenítése
+        self.index += 1 # Index növelése
 
 # Main function - később hasznos lesz a menü létrehozásában
 def main():
     # Globális változók létrehozása
-    global game_speed, x_pos_bg, y_pos_bg, points
+    global game_speed, x_pos_bg, y_pos_bg, points, obstacles
     run = True # Játék állapota
     clock = pygame.time.Clock() # Időmérő létrehozása
 
@@ -170,6 +213,8 @@ def main():
     points = 0
 
     font = pygame.font.Font('freesansbold.ttf', 20) # Betűtípus létrehozása a kiiratáshoz
+
+    obstacles = [] # Akadályok tömb az akadályok tárolására
 
     def score():
         global points,game_speed
@@ -216,6 +261,20 @@ def main():
 
         player.draw(main_screen) # Player megjelenítése
         player.update(userInput) # Lenyomott billentyű átadása
+
+        if len(obstacles) == 0: # HA nincs a képernyőn akadály akkor random létrehozunk egyet
+            if random.randint(0, 2) == 0:
+                obstacles.append(SmallCactus(small_cactus)) # Kis kaktusz létrehozása
+            elif random.randint(0, 2) == 1:
+                obstacles.append(LargeCactus(large_cactus)) # Nagy kaktusz létrehozása
+            elif random.randint(0, 2) == 2:
+                obstacles.append(Bird(bird)) # Madár létrehozása
+
+        for obstacle in obstacles: # Akadályok végig-iterálása
+            obstacle.draw(main_screen) # Akadály megjelenítése
+            obstacle.update() # Akadály mozgatása
+            if player.dino_box.colliderect(obstacle.rect): # HA a player hozzáér az akadály hitboxához
+                pygame.draw.rect(main_screen,(0,0,0),player.dino_box,2) # Fekete négyzet kirajzolása
 
         cloud.draw(main_screen) # Felhő megjelenítése
         cloud.update() #Felhő mozgatása
